@@ -12,11 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22.14.0'
           registry-url: 'https://registry.npmjs.org'
-          cache: false
       - name: Use a pinned OIDC-capable npm CLI
         run: npm install --global npm@11.15.0
       - name: Set a unique rejected version
