@@ -42,7 +42,7 @@ jobs:
           echo "package-file=${package_file}" >> "${GITHUB_OUTPUT}"
       - name: Verify release assets fail closed
         run: node scripts/verify-release-assets.mjs release
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: npm-release-${{ github.ref_name }}
           path: release/
@@ -62,12 +62,12 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Use a pinned staged-publishing npm CLI
         run: npm install --global npm@11.15.0
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: npm-release-${{ github.ref_name }}
           path: release/
       - name: Stage the exact tarball through OIDC
-        run: npm stage publish "release/${{ needs.prepare.outputs.package-file }}" --access public --tag rehearsal
+        run: npm stage publish "./release/${{ needs.prepare.outputs.package-file }}" --access public --tag rehearsal
       - name: Create a draft GitHub Release with the same assets
         env:
           GH_TOKEN: ${{ github.token }}
