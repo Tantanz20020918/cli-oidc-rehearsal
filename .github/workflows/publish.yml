@@ -40,6 +40,8 @@ jobs:
           mv "${package_file}" release/
           (cd release && sha256sum "${package_file}" > checksums.txt)
           echo "package-file=${package_file}" >> "${GITHUB_OUTPUT}"
+      - name: Verify release assets fail closed
+        run: node scripts/verify-release-assets.mjs release
       - uses: actions/upload-artifact@v4
         with:
           name: npm-release-${{ github.ref_name }}
