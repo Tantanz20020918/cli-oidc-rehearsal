@@ -1,26 +1,78 @@
-name: Publish with npm Trusted Publishing
+name: Stage npm release from a protected tag
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
-  publish:
+  prepare:
     runs-on: ubuntu-latest
+    outputs:
+      package-file: ${{ steps.pack.outputs.package-file }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
           node-version: '22.14.0'
           registry-url: 'https://registry.npmjs.org'
-      - name: Use a pinned OIDC-capable npm CLI
+      - name: Use a pinned staged-publishing npm CLI
         run: npm install --global npm@11.15.0
-      - name: Test
-        run: npm test
-      - name: Set a unique rehearsal version
-        run: npm version "0.1.${GITHUB_RUN_NUMBER}" --no-git-tag-version
-      - name: Publish through OIDC
-        run: npm publish --access public
+      - name: Verify package, lock file, and tag versions
+        run: npm run release:verify -- "${GITHUB_REF_NAME}"
+      - name: Verify the tagged commit is on main
+        run: git merge-base --is-ancestor "${GITHUB_SHA}" origin/main
+      - name: Install and test
+        run: |
+          npm ci
+          npm test
+      - name: Pack once and generate checksum
+        id: pack
+        shell: bash
+        run: |
+          mkdir release
+          package_file="$(npm pack --json | node -e "let input=''; process.stdin.on('data', chunk => input += chunk); process.stdin.on('end', () => process.stdout.write(JSON.parse(input)[0].filename));")"
+          mv "${package_file}" release/
+          (cd release && sha256sum "${package_file}" > checksums.txt)
+          echo "package-file=${package_file}" >> "${GITHUB_OUTPUT}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-release-${{ github.ref_name }}
+          path: release/
+          if-no-files-found: error
+
+  stage:
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.14.0'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Use a pinned staged-publishing npm CLI
+        run: npm install --global npm@11.15.0
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-release-${{ github.ref_name }}
+          path: release/
+      - name: Stage the exact tarball through OIDC
+        run: npm stage publish "release/${{ needs.prepare.outputs.package-file }}" --access public --tag rehearsal
+      - name: Create a draft GitHub Release with the same assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" release/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --verify-tag \
+            --draft \
+            --title "${GITHUB_REF_NAME}" \
+            --notes "Rehearsal release. The npm package is staged for review and is not public."
