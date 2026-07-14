@@ -1,0 +1,25 @@
+name: Verify untrusted workflow rejection
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          registry-url: 'https://registry.npmjs.org'
+          cache: false
+      - name: Use a pinned OIDC-capable npm CLI
+        run: npm install --global npm@11.15.0
+      - name: Set a unique rejected version
+        run: npm version "0.2.${GITHUB_RUN_NUMBER}" --no-git-tag-version
+      - name: Publish from an unregistered workflow
+        run: npm publish --access public

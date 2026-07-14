@@ -1,0 +1,33 @@
+{
+  "name": "larksuite-cli-oidc-rehearsal-tantanz20020918",
+  "version": "0.0.1",
+  "description": "Disposable package for rehearsing npm trusted publishing with GitHub Actions.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tantanz20020918/cli-oidc-rehearsal.git"
+  },
+  "keywords": [
+    "npm",
+    "oidc",
+    "trusted-publishing",
+    "rehearsal"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  },
+  "files": [
+    "index.js",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  }
+}
