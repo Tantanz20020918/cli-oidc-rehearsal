@@ -1,0 +1,49 @@
+name: Verify release guards reject invalid actors
+
+on:
+  workflow_dispatch:
+    inputs:
+      guard:
+        description: Guard to exercise
+        required: true
+        type: choice
+        options:
+          - tag-ruleset
+          - environment-policy
+
+permissions:
+  contents: read
+
+jobs:
+  tag-ruleset:
+    if: inputs.guard == 'tag-ruleset'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify GITHUB_TOKEN cannot create a protected release tag
+        shell: bash
+        run: |
+          tag="v9.9.9-ruleset-${GITHUB_RUN_ID}"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag "${tag}"
+          if git push origin "${tag}"; then
+            echo "protected tag creation unexpectedly succeeded" >&2
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}"; then
+            echo "rejected tag unexpectedly exists on the remote" >&2
+            exit 1
+          fi
+          echo "protected tag creation was rejected as expected"
+
+  environment-policy:
+    if: inputs.guard == 'environment-policy'
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    steps:
+      - run: |
+          echo "non-v* source unexpectedly entered npm-publish" >&2
+          exit 1

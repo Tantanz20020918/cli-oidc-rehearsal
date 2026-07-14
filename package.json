@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "release:verify": "node scripts/verify-release.mjs",
-    "test": "node test.js"
+    "test": "node test.js && node --test scripts/verify-release.test.mjs"
   },
   "repository": {
     "type": "git",
