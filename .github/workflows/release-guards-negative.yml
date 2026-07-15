@@ -10,6 +10,7 @@ on:
         options:
           - tag-ruleset
           - environment-policy
+          - checksum-mismatch
 
 permissions:
   contents: read
@@ -47,3 +48,27 @@ jobs:
       - run: |
           echo "non-v* source unexpectedly entered npm-publish" >&2
           exit 1
+
+  checksum-mismatch:
+    if: inputs.guard == 'checksum-mismatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.14.0'
+      - name: Verify a tarball changed after checksum generation is rejected
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir negative-release
+          printf 'original tarball' > negative-release/package-1.0.0.tgz
+          (cd negative-release && sha256sum package-1.0.0.tgz > checksums.txt)
+          printf 'tampered tarball' > negative-release/package-1.0.0.tgz
+
+          if node scripts/verify-release-assets.mjs negative-release; then
+            echo "checksum mismatch unexpectedly passed verification" >&2
+            exit 1
+          fi
+
+          echo "checksum mismatch was rejected as expected"
