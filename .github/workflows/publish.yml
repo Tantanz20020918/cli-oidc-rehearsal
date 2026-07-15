@@ -1,4 +1,4 @@
-name: Stage npm release from a protected tag
+name: Publish npm release from a protected tag
 
 on:
   push:
@@ -21,8 +21,8 @@ jobs:
         with:
           node-version: '22.14.0'
           registry-url: 'https://registry.npmjs.org'
-      - name: Use a pinned staged-publishing npm CLI
-        run: npm install --global npm@11.15.0
+      - name: Use a pinned OIDC-capable npm CLI
+        run: npm install --global npm@11.18.0
       - name: Verify package, lock file, and tag versions
         run: npm run release:verify -- "${GITHUB_REF_NAME}"
       - name: Verify the tagged commit is on main
@@ -48,7 +48,7 @@ jobs:
           path: release/
           if-no-files-found: error
 
-  stage:
+  publish:
     needs: prepare
     runs-on: ubuntu-latest
     environment: npm-publish
@@ -60,14 +60,14 @@ jobs:
         with:
           node-version: '22.14.0'
           registry-url: 'https://registry.npmjs.org'
-      - name: Use a pinned staged-publishing npm CLI
-        run: npm install --global npm@11.15.0
+      - name: Use a pinned OIDC-capable npm CLI
+        run: npm install --global npm@11.18.0
       - uses: actions/download-artifact@v8
         with:
           name: npm-release-${{ github.ref_name }}
           path: release/
-      - name: Stage the exact tarball through OIDC
-        run: npm stage publish "./release/${{ needs.prepare.outputs.package-file }}" --access public --tag rehearsal
+      - name: Publish the exact tarball through OIDC
+        run: npm publish "./release/${{ needs.prepare.outputs.package-file }}" --access public --tag rehearsal
       - name: Create a draft GitHub Release with the same assets
         env:
           GH_TOKEN: ${{ github.token }}
@@ -77,4 +77,4 @@ jobs:
             --verify-tag \
             --draft \
             --title "${GITHUB_REF_NAME}" \
-            --notes "Rehearsal release. The npm package is staged for review and is not public."
+            --notes "Rehearsal release published through npm Trusted Publishing under the rehearsal dist-tag."

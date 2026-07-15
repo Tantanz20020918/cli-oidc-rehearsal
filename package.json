@@ -1,6 +1,6 @@
 {
   "name": "@guokexin.02/cli-oidc-rehearsal",
-  "version": "0.3.0-beta.0",
+  "version": "0.4.0-rehearsal.0",
   "description": "Disposable package for rehearsing npm trusted publishing with GitHub Actions.",
   "main": "index.js",
   "scripts": {
