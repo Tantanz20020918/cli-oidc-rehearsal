@@ -21,4 +21,4 @@ jobs:
       - name: Set a unique rejected version
         run: npm version "0.2.${GITHUB_RUN_NUMBER}" --no-git-tag-version
       - name: Publish from an unregistered workflow
-        run: npm publish --access public
+        run: npm publish --access public --tag rejected-workflow-test
