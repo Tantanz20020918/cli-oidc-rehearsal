@@ -4,8 +4,8 @@
   "description": "Disposable package for rehearsing npm trusted publishing with GitHub Actions.",
   "main": "index.js",
   "scripts": {
-    "release:verify": "node scripts/verify-release.mjs",
-    "test": "node test.js && node --test scripts/*.test.mjs"
+    "release:check": "node scripts/release-preflight.js",
+    "test": "node test.js && node --test scripts/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
   },
   "files": [
     "index.js",
+    "checksums.txt",
     "LICENSE",
     "README.md"
   ],
